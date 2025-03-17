@@ -1,5 +1,6 @@
 # note
-semplice note per shell scritta in python
+semplice note per shell scritta in python.
+Il file note-nomsg non usa l'estensione term color per dare messaggi di stato.
 
 ## Istruzioni app note
 1. rendere eseguibile il file note : 'chmod +x note'
