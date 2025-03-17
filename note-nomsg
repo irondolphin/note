@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+import os
+import pickle
+import getpass
+
+def save_note(note):
+    with open(".note.dat", "wb") as note_file:
+        pickle.dump(note, note_file)
+
+def load_note():
+    note = []
+    if os.path.exists(".note.dat"):
+        with open(".note.dat", "rb") as note_file:
+            try:
+                note = pickle.load(note_file)
+            except EOFError:
+                note = []
+    return note
+
+def add_note(note):
+    titolo = input("Inserisci il nome della nota: ")
+    password = getpass.getpass("Inserisci una password per proteggere la nota (lascia vuoto per nessuna password): ")
+    print("Scrivi la nota (termina con una riga vuota):")
+    
+    # Raccogli il contenuto della nota su più righe
+    contenuto = []
+    while True:
+        line = input()
+        if line == "":
+            break
+        contenuto.append(line)
+    
+    # Unisci le righe con newline per formattare correttamente in Markdown
+    contenuto_markdown = "\n".join(contenuto)
+    note.append((titolo, contenuto_markdown, password))
+    save_note(note)
+    print("Nota salvata")
+
+def view_note_markdown(note):
+    for item in note:
+        if len(item) == 3:
+            titolo, contenuto, password = item
+        else:
+            titolo, contenuto = item
+            password = None
+
+        if password:
+            input_password = getpass.getpass(f"La nota '{titolo}' è protetta da password. Inserisci la password: ")
+            if input_password != password:
+                print("Password errata. Accesso negato.")
+                continue
+        print(f"\n│ {titolo}\n")
+        print(f"{contenuto}\n")
+        print("─" * 40)
+
+def view_titolo(note):
+    print("┌" + "─" * 15)
+    for item in note:
+        if len(item) == 3:
+            titolo, _, _ = item
+        else:
+            titolo, _ = item
+        print(f"│ {titolo}")
+    print("└" + "─" * 15)
+
+def search_note_markdown(note):
+    search_title = input("Inserisci il titolo parziale della nota da cercare: ")
+    found = False
+    for item in note:
+        if len(item) == 3:
+            titolo, contenuto, password = item
+        else:
+            titolo, contenuto = item
+            password = None
+
+        if search_title.lower() in titolo.lower():
+            if password:
+                input_password = getpass.getpass(f"La nota '{titolo}' è protetta da password. Inserisci la password: ")
+                if input_password != password:
+                    print("Password errata. Accesso negato.")
+                    continue
+            print(f"\n│ {titolo}\n")
+            print(f"{contenuto}\n")
+            print("─" * 40)
+            found = True
+    if not found:
+        print("Nessuna nota trovata con quel titolo parziale.")
+
+def modify_add_note_markdown(note):
+    search_title = input("Inserisci il titolo della nota da modificare: ")
+    for i, item in enumerate(note):
+        if len(item) == 3:
+            titolo, contenuto, password = item
+        else:
+            titolo, contenuto = item
+            password = None
+
+        if titolo.lower() == search_title.lower():
+            if password:
+                input_password = getpass.getpass(f"La nota '{titolo}' è protetta da password. Inserisci la password: ")
+                if input_password != password:
+                    print("Password errata. Accesso negato.")
+                    return
+            print("Inserisci il nuovo contenuto (termina con una riga vuota):")
+            new_content = []
+            while True:
+                line = input()
+                if line == "":
+                    break
+                new_content.append(line)
+            new_content_markdown = "\n".join(new_content)
+            contenuto += "\n" + new_content_markdown
+            note[i] = (titolo, contenuto, password)
+            save_note(note)
+            print("Nota modificata con successo.")
+            return
+    print("Nessuna nota trovata con quel titolo.")
+
+def modify_note_markdown(note):
+    search_title = input("Inserisci il titolo della nota da modificare: ")
+    for i, item in enumerate(note):
+        if len(item) == 3:
+            titolo, contenuto, password = item
+        else:
+            titolo, contenuto = item
+            password = None
+
+        if titolo.lower() == search_title.lower():
+            if password:
+                input_password = getpass.getpass(f"La nota '{titolo}' è protetta da password. Inserisci la password: ")
+                if input_password != password:
+                    print("Password errata. Accesso negato.")
+                    return
+            print("Inserisci il nuovo contenuto (termina con una riga vuota):")
+            new_content = []
+            while True:
+                line = input()
+                if line == "":
+                    break
+                new_content.append(line)
+            new_content_markdown = "\n".join(new_content)
+            note[i] = (titolo, new_content_markdown, password)
+            save_note(note)
+            print("Nota modificata con successo.")
+            return
+    print("Nessuna nota trovata con quel titolo.")
+
+def delete_note(note):
+    search_title = input("Inserisci il titolo della nota da eliminare: ")
+    for i, item in enumerate(note):
+        if len(item) == 3:
+            titolo, _, password = item
+        else:
+            titolo = item[0]
+            password = None
+
+        if titolo.lower() == search_title.lower():
+            if password:
+                input_password = getpass.getpass(f"La nota '{titolo}' è protetta da password. Inserisci la password: ")
+                if input_password != password:
+                    print("Password errata. Accesso negato.")
+                    return
+            del note[i]
+            save_note(note)
+            print("Nota eliminata con successo.")
+            return
+    print("Nessuna nota trovata con quel titolo.")
+
+def visualizza_aiuto():
+    print("┌" + "─" * 40 + "┬" + "─" * 40 + "┐" )
+    print("│ digita 1 per creare una nota" + " " * 11 + "│ digita 2 per visualizzare le note" + " " * 6 + "│")
+    print("├" + "─" * 40 + "┼" + "─" * 40 + "┤" )
+    print("│ digita 3 per cercare una nota" + " " * 10 + "│ digita 4 per sostituire il testo" + " " * 7 + "│")
+    print("│ in base al titolo" + " " * 22 + "│ integrale di una nota" + " " * 18 + "│")
+    print("├" + "─" * 40 + "┼" + "─" * 40 + "┤" )
+    print("│ digita 5 per aggiungere" + " " * 16 + "│ digita 6 per eliminare una nota" + " " * 8 + "│")
+    print("│ il testo ad una nota" + " " * 19 + "│" + " " * 40 + "│")
+    print("├" + "─" * 40 + "┼" + "─" * 40 + "┤" )
+    print("│ digita 7 per visualizzare i titoli" + " " * 5 + "│ digita 8 per uscire dalla applicazione" + " " + "│")
+    print("└" + "─" * 40 + "┴" + "─" * 40 + "┘" )
+
+def main():
+    note = load_note()
+
+    while True:
+        print("│ Note:")
+        print("│ 1: Crea ─ 2: Visualizza ─ 3: Cerca ─ 4: Modifica ─ 5: Aggiunta a nota ─ 6: Elimina ─ 7: Visualizza titoli ─ 8: Esci")
+        choice = input("└─▶ Scegli un'opzione da 1 a 8: ")
+
+        if choice == "aiuto":
+            visualizza_aiuto()
+        if choice == "1":
+            add_note(note)
+        elif choice == "2":
+            view_note_markdown(note)
+        elif choice == "3":
+            search_note_markdown(note)
+        elif choice == "4":
+            modify_note_markdown(note)
+        elif choice == "5":
+            modify_add_note_markdown(note)
+        elif choice == "6":
+            delete_note(note)
+        elif choice == "7":
+            view_titolo(note)
+        elif choice == "8":
+            print("\nA che serve scrivere, tanto so che non leggerete 🥺")
+            break
+        else:
+            print("Scelta non valida. Si prega di rispondere con 1, 2, 3, 4, 5, 6, 7 o 8")
+
+if __name__ == "__main__":
+    main()
